@@ -1,5 +1,6 @@
 const express = require('express');
 require("dotenv").config();
+const jwt = require("jsonwebtoken")
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
@@ -10,7 +11,26 @@ const port = process.env.PORT || 5000
 app.use(cors())
 app.use(express.json())
 
+function createToken(user) {
+  const token = jwt.sign(
+    {
+      email: user.email,
+    },
+    "secret",
+    { expiresIn: "7d" }
+  );
+  return token;
+}
 
+function verifyToken(req, res, next) {
+  const token = req.headers.authorization.split(" ")[1];
+  const verify = jwt.verify(token, "secret");
+  if (!verify?.email) {
+    return res.send("You are not authorized");
+  }
+  req.user = verify.email;
+  next();
+}
 
 
 
@@ -35,23 +55,28 @@ async function run() {
 
     // userCollection
 
-    app.put('/user/:email', async(req,res)=>{
-        // const user = req.body;
-        // const isExist = await userCollection.findOne({email: user?.email})
+    app.post('/user/:email', async(req,res)=>{
+        const user = req.body;
+        const token = createToken(user)
+        const isExist = await userCollection.findOne({email: user?.email})
 
-        // if(isExist?._id){
-        //     res.send("login success")
-        // }
+        if(isExist?._id){
+          return res.send({
+            statu: "success",
+            message: "Login success",
+            token,
+          });
+        }
 
-        const users = req.body;
-    const email = req.params.email
-    const query = {email:email}
-    const options = { upsert: true }
-    const updateDoc={
-        $set:users
-    }
-        const result = await userCollection.updateOne(query,updateDoc,options) 
-        res.send(result)
+    //     const users = req.body;
+    // const email = req.params.email
+    // const query = {email:email}
+    // const options = { upsert: true }
+    // const updateDoc={
+    //     $set:users
+    // }
+         await userCollection.updateOne(query,updateDoc,options) 
+        res.send({token})
     })
 
     app.get('/user',async(req,res)=>{
@@ -147,3 +172,4 @@ app.listen(port,()=>{
 
 // rimamnt46
 // dAnVfM762VHVeM0n
+// 'c1b7378cffd15bb1e32ec03ca25e5a3ef734d60f5bcc45b4c2aa1044220acac1f890bd6163cd42cb7659a3d78d4603eca9f8e33a218c6aec36d367017f8c720a'
