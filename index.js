@@ -11,26 +11,31 @@ const port = process.env.PORT || 5000
 app.use(cors())
 app.use(express.json())
 
-function createToken(user) {
-  const token = jwt.sign(
-    {
-      email: user.email,
-    },
-    "secret",
-    { expiresIn: "7d" }
-  );
-  return token;
-}
-
-// function verifyToken(req, res, next) {
-//   const token = req.headers.authorization.split(" ")[1];
-//   const verify = jwt.verify(token, "secret");
-//   if (!verify?.email) {
-//     return res.send("You are not authorized");
-//   }
-//   req.user = verify.email;
-//   next();
+// function createToken(user) {
+//   const token = jwt.sign(
+//     {
+//       email: user.email,
+//     },
+//     "secret",
+//     { expiresIn: "7d" }
+//   );
+//   return token;
 // }
+
+function verifyToken(req, res, next) {
+  const authorization = req.headers.authorization
+  if(!authorization){
+    return res.status(401).send({error:true, message:"unathorization access"})
+  }
+  const token = authorization.split(' ')[1]
+  jwt.verify(token,process.env.JWT_ACCESS_TOKEN,(error,decoded)=>{
+    if(error){
+      return res.status(401).send({error:true, message:"unathorization access"})
+    }
+req.decoded = decoded
+next()
+  })
+}
 
 
 
@@ -53,19 +58,28 @@ async function run() {
     const userCollection = client.db('userDatabase').collection('userCollection')
     const productionCollection = client.db("productDb").collection('product-collection')
 
+// jwt
+
+app.post("/jwt", (req,res)=>{
+  const user = req.body
+  const token = jwt.sign(user,process.env.JWT_ACCESS_TOKEN,{expiresIn:'5d'})
+  
+  res.send({token})
+})
+
+
     // userCollection
 
-    app.post('/user/:email', async(req,res)=>{
+    app.post('/user/:email',verifyToken, async(req,res)=>{
         const user = req.body;
-        const token = createToken(user)
-        console.log(token)
+        
         const isExist = await userCollection.findOne({email: user?.email})
 
         if(isExist?._id){
           return res.send({
             statu: "success",
             message: "Login success",
-            token,
+            
           });
         }
 
@@ -76,17 +90,17 @@ async function run() {
     // const updateDoc={
     //     $set:users
     // }
-         await userCollection.updateOne(query,updateDoc,options) 
-        res.send({token})
+        const result = await userCollection.updateOne(query,updateDoc,options) 
+        res.send(result)
     })
 
-    app.get('/user',async(req,res)=>{
+    app.get('/user',verifyToken, async(req,res)=>{
         const result = await userCollection.find().toArray()
         res.send(result)
     })
 
 
-    app.get('/user/:id',async(req,res)=>{
+    app.get('/user/:id',verifyToken, async(req,res)=>{
         const id = req.params.id;
         const filterId = {_id : new ObjectId(id)}
         const result = await userCollection.findOne(filterId)
@@ -94,7 +108,7 @@ async function run() {
     })
 
 
-    app.patch('/user/:id',async(req,res)=>{
+    app.patch('/user/:id',verifyToken,async(req,res)=>{
         const id = req.params.id;
         
         const body = req.body
@@ -109,27 +123,27 @@ const updateDoc ={
 
     // product route
 
-    app.post('/product',async(req,res)=>{
+    app.post('/product',verifyToken ,async(req,res)=>{
       const product = req.body;
       const result = await productionCollection.insertOne(product)
       res.send(result)
     })
 
-    app.get('/product', async(req,res)=>{
+    app.get('/product',verifyToken, async(req,res)=>{
 
       const result = await productionCollection.find().toArray()
       res.send(result)
 
     })
 
-    app.get('/product/:id', async(req,res)=>{
+    app.get('/product/:id',verifyToken, async(req,res)=>{
       const id = req.params.id;
       const filterId = {_id : new ObjectId(id)}
       const result = await productionCollection.findOne(filterId)
       res.send(result)
     })
 
-    app.patch('/product/:id', async(req,res)=>{
+    app.patch('/product/:id',verifyToken, async(req,res)=>{
       const product = req.body;
       const id = req.params.id;
       const filteredId = { _id : new ObjectId(id)}
@@ -142,7 +156,7 @@ const updateDoc ={
     })
 
 
-    app.delete('/product/:id', async(req,res)=>{
+    app.delete('/product/:id',verifyToken, async(req,res)=>{
       const id = req.params.id;
       const filteredId = {_id : new ObjectId(id)}
       const result = await productionCollection.deleteOne(filteredId)
