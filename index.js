@@ -70,20 +70,35 @@ app.post("/jwt", (req,res)=>{
 
     // userCollection
 
-    app.put('/user/:email', async(req,res)=>{
+    // app.put('/user/:email', async(req,res)=>{
         
-        const users = req.body;
-    const email = req.params.email
-    const query = {email:email}
-    const options = { upsert: true }
-    const updateDoc={
-        $set:users
-    }
-        const result = await userCollection.updateOne(query,updateDoc,options) 
-        res.send(result)
+    //     const users = req.body;
+    // const email = req.params.email
+    // console.log(email)
+    // const query = {email:email}
+    // const options = { upsert: true }
+    // const updateDoc={
+    //     $set:users
+    // }
+    //     const result = await userCollection.updateOne(query,updateDoc,options) 
+    //     res.send(result)
+    // })
+
+    app.post("/user/:email", async(req,res)=>{
+      const user = req.body;
+      const isExist = await userCollection.findOne({email: user?.email})
+      if(isExist){
+        return res.send({
+          statu: "success",
+          message: "Login success",
+          
+        })
+      }
+      const result = await userCollection.insertOne(user)
+      res.send(result)
     })
 
-    app.get('/user',verifyToken, async(req,res)=>{
+    app.get('/user', async(req,res)=>{
         const result = await userCollection.find().toArray()
         res.send(result)
     })
