@@ -71,18 +71,7 @@ app.post("/jwt", (req,res)=>{
     // userCollection
 
     app.put('/user/:email', async(req,res)=>{
-        // const user = req.body;
         
-        // const isExist = await userCollection.findOne({email: user?.email})
-
-        // if(isExist?._id){
-        //   return res.send({
-        //     statu: "success",
-        //     message: "Login success",
-            
-        //   });
-        // }
-
         const users = req.body;
     const email = req.params.email
     const query = {email:email}
