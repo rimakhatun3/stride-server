@@ -108,7 +108,7 @@ app.post("/jwt", (req,res)=>{
     })
 
 
-    app.patch('/user/:id',verifyToken,async(req,res)=>{
+    app.patch('/user/:id',async(req,res)=>{
         const id = req.params.id;
         
         const body = req.body
@@ -129,21 +129,21 @@ const updateDoc ={
       res.send(result)
     })
 
-    app.get('/product',verifyToken, async(req,res)=>{
+    app.get('/product', async(req,res)=>{
 
       const result = await productionCollection.find().toArray()
       res.send(result)
 
     })
 
-    app.get('/product/:id',verifyToken, async(req,res)=>{
+    app.get('/product/:id', async(req,res)=>{
       const id = req.params.id;
       const filterId = {_id : new ObjectId(id)}
       const result = await productionCollection.findOne(filterId)
       res.send(result)
     })
 
-    app.patch('/product/:id',verifyToken, async(req,res)=>{
+    app.patch('/product/:id', async(req,res)=>{
       const product = req.body;
       const id = req.params.id;
       const filteredId = { _id : new ObjectId(id)}
