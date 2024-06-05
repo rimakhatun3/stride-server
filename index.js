@@ -84,7 +84,7 @@ app.post("/jwt", (req,res)=>{
     //     res.send(result)
     // })
 
-    app.post("/user", async(req,res)=>{
+    app.post("/user", verifyToken, async(req,res)=>{
       const user = req.body;
       const isExist = await userCollection.findOne({email: user?.email})
       if(isExist._id){
