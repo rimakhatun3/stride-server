@@ -22,15 +22,15 @@ function createToken(user) {
   return token;
 }
 
-function verifyToken(req, res, next) {
-  const token = req.headers.authorization.split(" ")[1];
-  const verify = jwt.verify(token, "secret");
-  if (!verify?.email) {
-    return res.send("You are not authorized");
-  }
-  req.user = verify.email;
-  next();
-}
+// function verifyToken(req, res, next) {
+//   const token = req.headers.authorization.split(" ")[1];
+//   const verify = jwt.verify(token, "secret");
+//   if (!verify?.email) {
+//     return res.send("You are not authorized");
+//   }
+//   req.user = verify.email;
+//   next();
+// }
 
 
 
@@ -58,6 +58,7 @@ async function run() {
     app.post('/user/:email', async(req,res)=>{
         const user = req.body;
         const token = createToken(user)
+        console.log(token)
         const isExist = await userCollection.findOne({email: user?.email})
 
         if(isExist?._id){
