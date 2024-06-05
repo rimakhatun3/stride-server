@@ -87,13 +87,13 @@ app.post("/jwt", (req,res)=>{
     app.post("/user", async(req,res)=>{
       const user = req.body;
       const isExist = await userCollection.findOne({email: user?.email})
-      // if(isExist){
-      //   return res.send({
-      //     statu: "success",
-      //     message: "Login success",
+      if(isExist._id){
+        return res.send({
+          statu: "success",
+          message: "Login success",
           
-      //   })
-      // }
+        })
+      }
       const result = await userCollection.insertOne(user)
       res.send(result)
     })
@@ -123,6 +123,13 @@ const updateDoc ={
 
         const result = await userCollection.updateOne(filterId,updateDoc)
         res.send(result)
+    })
+
+    app.delete('/user/:id',verifyToken, async(req,res)=>{
+      const id = req.params.id;
+      const filteredId = {_id : new ObjectId(id)}
+      const result = await userCollection.deleteOne(filteredId)
+      res.send(result)
     })
 
     // product route
