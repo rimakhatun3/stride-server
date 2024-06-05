@@ -100,7 +100,7 @@ app.post("/jwt", (req,res)=>{
     })
 
 
-    app.get('/user/:id',verifyToken, async(req,res)=>{
+    app.get('/user/:id', async(req,res)=>{
         const id = req.params.id;
         const filterId = {_id : new ObjectId(id)}
         const result = await userCollection.findOne(filterId)
